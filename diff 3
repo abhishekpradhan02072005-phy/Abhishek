@@ -1,0 +1,66 @@
+clc;
+clear; clf;
+
+// ---------- Constants ----------
+e2 = 14.402;             // eV.Angstrom
+hc = 1973;               // hbar*c
+mc2 = 0.511e6;           // eV
+
+h2_2m = (hc^2)/(2*mc2);
+
+// ---------- Grid ----------
+a = 1e12;     // very large -> Hydrogen potential
+// use a=5 later for screened potential
+
+rmax = 5;
+N = 100000;
+h = rmax/(N+1);
+
+r = (1:N)'*h;
+
+// ---------- Potential ----------
+V = -e2 ./ r .* exp(-r/a);
+y0 = [0;1.0];
+
+
+function dy = sch(r,y)
+
+    global E  h2_2m e2
+    V = -e2./r.*exp(-r/a);
+    dy(1) = y(2); 
+    dy(2) = (V-E)/h2_2m*y(1); 
+
+endfunction
+
+function f = boundary(Eguess)
+
+    global E y0
+    E = Eguess;
+    y = ode(y0,r(1),r,sch);
+    f = y(1,$);
+
+endfunction
+
+a = 3
+Eg = fsolve(-14.6,boundary);
+E = Eg; 
+disp("Ground state energy for a = 3", E)
+y3 = ode(y0,r(1),r,sch);
+plot(r,y3(1,:),'b-', "linewidth",3)
+a = 5
+Eg = fsolve(-14.6,boundary);
+E = Eg;
+disp("Ground state energy for a = 5", E)
+y5 = ode(y0,r(1),r,sch);
+plot(r,y5(1,:),'r-', "linewidth",3)
+a = 7
+Eg = fsolve(-14.6,boundary);
+E = Eg;
+disp("Ground state energy for a = 7", E)
+y7 = ode(y0,r(1),r,sch);
+plot(r,y7(1,:),'r-', "linewidth",3)
+
+legend("a = 3","a = 5", "a = 7");
+xlabel("r (Angstrom)");
+ylabel("u(r)");
+title("Hydrogen s-wave with Screened potential");
